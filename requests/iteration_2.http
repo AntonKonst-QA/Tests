@@ -1,0 +1,30 @@
+### Депозит денег пользователям
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+
+{
+  "id": 1,
+  "balance": 5000
+}
+
+### Перевод денег с одного аккаунта на другой
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 10000
+}
+
+### Изменение имени пользователя
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: application/json
+
+{
+  "name": "kate pavlova"
+}
+
+### Проверка
+GET http://localhost:4111/api/v1/accounts/1/transactions
+Content-Type: application/json

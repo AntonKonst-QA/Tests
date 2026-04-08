@@ -7,6 +7,46 @@ Content-Type: application/json
   "balance": 5000
 }
 
+### Проверка денег пользователя на депозите
+GET http://localhost:4111/api/v1/customer/profile
+
+### Граничные значения для депозита денег пользователям
+### Проверка 1
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+
+{
+  "id": 1,
+  "balance": 5000.01
+}
+
+### Проверка изменени счета на депозите пользователя
+GET http://localhost:4111/api/v1/customer/profile
+
+### Проверка 2
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+
+{
+  "id": 1,
+  "balance": 4999.99
+}
+
+### Проверка изменени счета на депозите пользователя
+GET http://localhost:4111/api/v1/customer/profile
+
+### Проверка 3
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: application/json
+
+{
+  "id": 1,
+  "balance": 0.01
+}
+
+### Проверка изменени счета на депозите пользователя
+GET http://localhost:4111/api/v1/customer/profile
+
 ### Перевод денег с одного аккаунта на другой
 POST http://localhost:4111/api/v1/accounts/transfer
 Content-Type: application/json
@@ -17,6 +57,49 @@ Content-Type: application/json
   "amount": 10000
 }
 
+### Проверка, что перевод денег с одного аккаунта на другой успешен
+GET: http://localhost:4111/api/v1/accounts/{id}/transactions
+
+### Граничные значения для перевода денег
+### Проверка 1
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 10000.01
+}
+
+### Проверка, что перевод денег с одного аккаунта на другой неуспешен
+GET: http://localhost:4111/api/v1/accounts/{id}/transactions
+
+### Проверка 2
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 9999.99
+}
+
+### Проверка, что перевод денег с одного аккаунта на другой успешен
+GET: http://localhost:4111/api/v1/accounts/{id}/transactions
+
+### Проверка 3
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: application/json
+
+{
+  "senderAccountId": 1,
+  "receiverAccountId": 2,
+  "amount": 0.01
+}
+
+### Проверка, что перевод денег с одного аккаунта на другой успешен
+GET: http://localhost:4111/api/v1/accounts/{id}/transactions
+
 ### Изменение имени пользователя
 PUT http://localhost:4111/api/v1/customer/profile
 Content-Type: application/json
@@ -25,6 +108,6 @@ Content-Type: application/json
   "name": "kate pavlova"
 }
 
-### Проверка
-GET http://localhost:4111/api/v1/accounts/1/transactions
-Content-Type: application/json
+### Проверка, что имя пользователя изменилось
+GET http://localhost:4111/api/v1/customer/accounts
+

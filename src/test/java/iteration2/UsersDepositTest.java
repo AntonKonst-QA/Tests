@@ -26,6 +26,17 @@ public class UsersDepositTest {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK);
+
+        // Проверяем результаты (GET)
+        given()
+                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
+                .pathParams("id", 1)
+                .when()
+                .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .log().all();
     }
 
     @Nested
@@ -37,7 +48,7 @@ public class UsersDepositTest {
                 -5000 // Отрицательная сумма не депозите
         })
 
-        public  void ailedGenerateDepositTest(int invalidDeposit) {
+        public  void failedGenerateDepositTest(int invalidDeposit) {
             given()
                     .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
                     .contentType(ContentType.JSON)
@@ -51,7 +62,8 @@ public class UsersDepositTest {
                     .post("http://localhost:4111/api/v1/accounts/deposit")
                     .then()
                     .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+                    .statusCode(HttpStatus.SC_BAD_REQUEST)
+                    .log().all();
         }
     }
 
@@ -59,7 +71,7 @@ public class UsersDepositTest {
     class DepositeToNonAccountOrSomeOneTests {
 
         @Test
-        public  void depositToNonAccountTest() {
+        public void depositToNonAccountTest() {
             given()
                     .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
                     .contentType(ContentType.JSON)
@@ -77,7 +89,7 @@ public class UsersDepositTest {
         }
 
         @Test
-        public  void depositToSomeOneElseAccountTest() {
+        public void depositToSomeOneElseAccountTest() {
             given()
                     .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
                     .contentType(ContentType.JSON)
@@ -92,6 +104,64 @@ public class UsersDepositTest {
                     .then()
                     .assertThat()
                     .statusCode(HttpStatus.SC_BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    class LimitValuesDepositTests {
+
+        @Test
+        public  void moreThanPermissibleAmountTest() {
+            given()
+                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("""
+                            {
+                              "id": 1,
+                              "balance": 5000.01
+                            }
+                            """)
+                    .post("http://localhost:4111/api/v1/accounts/deposit")
+                    .then()
+                    .assertThat()
+                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+        }
+
+        @Test
+        public  void lessThanPermissibleAmountTest() {
+            given()
+                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("""
+                            {
+                              "id": 1,
+                              "balance": 4999.99
+                            }
+                            """)
+                    .post("http://localhost:4111/api/v1/accounts/deposit")
+                    .then()
+                    .assertThat()
+                    .statusCode(HttpStatus.SC_OK);
+        }
+
+        @Test
+        public  void moreThanZeroTest() {
+            given()
+                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body("""
+                            {
+                              "id": 1,
+                              "balance": 0.01
+                            }
+                            """)
+                    .post("http://localhost:4111/api/v1/accounts/deposit")
+                    .then()
+                    .assertThat()
+                    .statusCode(HttpStatus.SC_OK);
         }
     }
 }

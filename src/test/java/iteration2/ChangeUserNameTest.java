@@ -25,6 +25,16 @@ public class ChangeUserNameTest {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK);
+
+        // Проверяем результаты (GET)
+        given()
+                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
+                .when()
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .log().all();
     }
 
     @Nested

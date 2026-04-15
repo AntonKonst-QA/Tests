@@ -1,42 +1,32 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import models.GenerateDepositRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static io.restassured.RestAssured.given;
+import requests.UserGenerateDepositRequest;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
 public class UsersDepositTest {
+    public static final int VALID_DEPOSIT = 5000;
+    public static final int ID = 1;
     @Test
     public void successGenerateDepositTest() {
-        given()
-                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("""
-                        {
-                          "id": 1,
-                          "balance": 5000
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/accounts/deposit")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+        GenerateDepositRequest body = GenerateDepositRequest.builder()
+                .id(1)
+                .balance(VALID_DEPOSIT)
+                .build();
+
+        UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                RequestSpecs.authUser(),
+                ResponseSpecs.successResponse()
+        );
+        depositAction.post(body);
 
         // Проверяем результаты (GET)
-        given()
-                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                .pathParams("id", 1)
-                .when()
-                .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .log().all();
+        depositAction.get("/api/v1/accounts/{id}/transactions");
     }
 
     @Nested
@@ -49,61 +39,46 @@ public class UsersDepositTest {
         })
 
         public  void failedGenerateDepositTest(int invalidDeposit) {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 1,
-                              "balance": %d
-                            }
-                            """.formatted(invalidDeposit))
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST)
-                    .log().all();
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(1)
+                    .balance(invalidDeposit)
+                    .build();
+
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+            depositAction.post(body);
         }
     }
 
     @Nested
-    class DepositeToNonAccountOrSomeOneTests {
+    class DepositToNonAccountOrSomeOneTests {
 
         @Test
         public void depositToNonAccountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 0,
-                              "balance": 5000
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_FORBIDDEN);
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(0)
+                    .balance(VALID_DEPOSIT)
+                    .build();
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.forbiddenResponse()
+            );
+            depositAction.post(body);
         }
 
         @Test
         public void depositToSomeOneElseAccountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 2, // ID2 принадлежит другому пользователю
-                              "balance": 5000
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(2) // ID2 принадлежит другому пользователю
+                    .balance(VALID_DEPOSIT)
+                    .build();
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+            depositAction.post(body);
         }
     }
 
@@ -112,56 +87,41 @@ public class UsersDepositTest {
 
         @Test
         public  void moreThanPermissibleAmountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 1,
-                              "balance": 5000.01
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(ID)
+                    .balance(5000.01)
+                    .build();
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+            depositAction.post(body);
         }
 
         @Test
         public  void lessThanPermissibleAmountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 1,
-                              "balance": 4999.99
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK);
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(ID)
+                    .balance(4999.99)
+                    .build();
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
+            depositAction.post(body);
         }
 
         @Test
         public  void moreThanZeroTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "id": 1,
-                              "balance": 0.01
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/deposit")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK);
+            GenerateDepositRequest body = GenerateDepositRequest.builder()
+                    .id(ID)
+                    .balance(0.01)
+                    .build();
+            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
+            depositAction.post(body);
         }
     }
 }

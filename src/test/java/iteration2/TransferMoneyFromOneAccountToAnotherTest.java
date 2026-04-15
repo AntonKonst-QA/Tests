@@ -1,157 +1,113 @@
 package iteration2;
 
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import models.GenerateTransferRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static io.restassured.RestAssured.given;
+import requests.UserGenerateTransferRequest;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
 public class TransferMoneyFromOneAccountToAnotherTest {
-
     // Перевод на свой аккаунт
     @Test
-    public void successTransferMoneyBetweenMyAccountTest(){
-        given()
-                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("""
-                        {
-                          "senderAccountId": 1,
-                          "receiverAccountId": 2,
-                          "amount": 250.75
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+    public void successTransferMoneyBetweenMyAccountTest() {
+        GenerateTransferRequest body = GenerateTransferRequest.builder()
+                .senderAccountId(1)
+                .receiverAccountId(2)
+                .amount(220.1)
+                .build();
+
+        UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                RequestSpecs.authUser(),
+                ResponseSpecs.successResponse()
+        );
+
+        transferAction.post(body);
 
         // Проверяем результаты (GET)
-        given()
-                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                .pathParams("id", 1)
-                .when()
-                .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .log().all();
+        transferAction.get("/api/v1/accounts/{id}/transactions");
     }
 
     // Перевод на чужой аккаунт
     @Test
     public void successTransferMoneyToAnotherTest(){
-        given()
-                .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("""
-                        {
-                          "senderAccountId": 1,
-                          "receiverAccountId": 3,
-                          "amount": 0.56
-                        }
-                        """)
-                .post("http://localhost:4111/api/v1/accounts/transfer")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK);
+        GenerateTransferRequest body = GenerateTransferRequest.builder()
+                .senderAccountId(1)
+                .receiverAccountId(3)
+                .amount(0.65)
+                .build();
+
+        UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                RequestSpecs.authUser(),
+                ResponseSpecs.successResponse()
+        );
+
+        transferAction.post(body);
+
+        // Проверяем результаты (GET)
+        transferAction.get("/api/v1/accounts/{id}/transactions");
     }
 
+    // Перевод больше допустимого лимита
     @Nested
     class LimitValuesTransferTests {
         @Test
         public void moreThanPermissibleAmountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "senderAccountId": 1,
-                              "receiverAccountId": 2,
-                              "amount": 10000.01
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/transfer")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+            GenerateTransferRequest body = GenerateTransferRequest.builder()
+                    .senderAccountId(1)
+                    .receiverAccountId(2)
+                    .amount(10000.1)
+                    .build();
+
+            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+
+            transferAction.post(body);
 
             // Проверяем результаты (GET)
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .pathParams("id", 1)
-                    .when()
-                    .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .log().all();
+            transferAction.get("/api/v1/accounts/{id}/transactions");
         }
 
         @Test
         public void lessThanPermissibleAmountTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "senderAccountId": 1,
-                              "receiverAccountId": 2,
-                              "amount": 9999.99
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/transfer")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK);
+            GenerateTransferRequest body = GenerateTransferRequest.builder()
+                    .senderAccountId(1)
+                    .receiverAccountId(2)
+                    .amount(9999.99)
+                    .build();
+
+            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
+
+            transferAction.post(body);
 
             // Проверяем результаты (GET)
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .pathParams("id", 1)
-                    .when()
-                    .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .log().all();
+            transferAction.get("/api/v1/accounts/{id}/transactions");
         }
 
         @Test
         public void moreThanZeroTest() {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "senderAccountId": 1,
-                              "receiverAccountId": 2,
-                              "amount": 0.01
-                            }
-                            """)
-                    .post("http://localhost:4111/api/v1/accounts/transfer")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK);
+            GenerateTransferRequest body = GenerateTransferRequest.builder()
+                    .senderAccountId(1)
+                    .receiverAccountId(2)
+                    .amount(0.01)
+                    .build();
+
+            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
+
+            transferAction.post(body);
 
             // Проверяем результаты (GET)
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .pathParams("id", 1)
-                    .when()
-                    .get("http://localhost:4111/api/v1/accounts/{id}/transactions")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .log().all();
+            transferAction.get("/api/v1/accounts/{id}/transactions");
         }
     }
 
@@ -166,21 +122,21 @@ public class TransferMoneyFromOneAccountToAnotherTest {
         })
 
         public  void failedTransferMoneyTest(double invalidDeposit) {
-            given()
-                    .auth().preemptive().basic("kate1998", "verysTRongPassword33$")
-                    .contentType(ContentType.JSON)
-                    .accept(ContentType.JSON)
-                    .body("""
-                            {
-                              "senderAccountId": 1,
-                              "receiverAccountId": 2,
-                              "amount": %s
-                            }
-                            """.formatted(invalidDeposit))
-                    .post("http://localhost:4111/api/v1/accounts/transfer")
-                    .then()
-                    .assertThat()
-                    .statusCode(HttpStatus.SC_BAD_REQUEST);
+            GenerateTransferRequest body = GenerateTransferRequest.builder()
+                    .senderAccountId(1)
+                    .receiverAccountId(2)
+                    .amount(invalidDeposit)
+                    .build();
+
+            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+
+            transferAction.post(body);
+
+            // Проверяем результаты (GET)
+            transferAction.get("/api/v1/accounts/{id}/transactions");
         }
     }
 }

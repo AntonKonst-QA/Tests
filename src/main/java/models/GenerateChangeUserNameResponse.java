@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GenerateChangeUserNameResponse {
+public class GenerateChangeUserNameResponse extends BaseModel {
     private String message;
     private CustomerModel customer;
 

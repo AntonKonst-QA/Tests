@@ -1,30 +1,39 @@
 package iteration2;
 
+import generators.RandomData;
 import models.GenerateChangeUserNameRequest;
+import models.GenerateChangeUserNameResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.ChangeUserNameRequest;
+import requests.ChangeUserNameRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-public class ChangeUserNameTest {
+public class ChangeUserNameTest extends BaseTest{
     @Test
     public void successChangeUserName() {
+        String expectedName = RandomData.getUsername();
+
         GenerateChangeUserNameRequest body = GenerateChangeUserNameRequest.builder()
-                .name("John smith")
+                .name(expectedName)
                 .build();
 
-        ChangeUserNameRequest changeUserNameAction = new ChangeUserNameRequest(
+        ChangeUserNameRequester changeUserNameAction = new ChangeUserNameRequester(
                 RequestSpecs.authUser(),
                 ResponseSpecs.successResponse()
         );
 
-        changeUserNameAction.put(body);
+        GenerateChangeUserNameResponse response = changeUserNameAction.put(body)
+                .extract()
+                .as(GenerateChangeUserNameResponse.class);
 
-        // Проверяем результаты (GET)
-        changeUserNameAction.get("/api/v1/customer/profile");
+        org.junit.jupiter.api.Assertions.assertEquals(expectedName, response.getCustomer().getName());
+        org.junit.jupiter.api.Assertions.assertEquals("Profile updated successfully", response.getMessage());
+
+        // Проверяем результаты (GET). Но это не обязательно, т.к. выше выполнили проверку.
+        changeUserNameAction.get(body);
     }
 
     @Nested
@@ -43,7 +52,7 @@ public class ChangeUserNameTest {
                     .name(invalidName)
                     .build();
 
-            ChangeUserNameRequest nameAction = new ChangeUserNameRequest(
+            ChangeUserNameRequester nameAction = new ChangeUserNameRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );

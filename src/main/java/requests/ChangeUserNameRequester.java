@@ -3,22 +3,22 @@ package requests;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import models.BaseModel;
+import models.GenerateChangeUserNameRequest;
+
 import static io.restassured.RestAssured.given;
 
-public class ChangeUserNameRequest extends Request{
-    public ChangeUserNameRequest(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+public class ChangeUserNameRequester extends Request <GenerateChangeUserNameRequest> {
+    public ChangeUserNameRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
     @Override
-    public ValidatableResponse post(BaseModel model) {
-
+    public ValidatableResponse post(GenerateChangeUserNameRequest model) {
         return null;
     }
 
     @Override
-    public ValidatableResponse put(BaseModel model) {
+    public ValidatableResponse put(GenerateChangeUserNameRequest model) {
         return given()
                 .spec(requestSpecification)
                 .body(model)
@@ -29,11 +29,11 @@ public class ChangeUserNameRequest extends Request{
     }
 
     @Override
-    public ValidatableResponse get(String path) {
+    public ValidatableResponse get(GenerateChangeUserNameRequest model) {
         return given()
                 .spec(requestSpecification)
                 .when()
-                .get(path)
+                .get("/api/v1/customer/profile")
                 .then()
                 .assertThat()
                 .spec(responseSpecification);

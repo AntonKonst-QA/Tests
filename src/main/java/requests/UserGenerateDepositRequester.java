@@ -3,37 +3,38 @@ package requests;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
-import models.BaseModel;
+import models.GenerateDepositRequest;
+
 import static io.restassured.RestAssured.given;
 
-public class UserGenerateTransferRequest extends Request{
-
-    public UserGenerateTransferRequest(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+public class UserGenerateDepositRequester extends Request <GenerateDepositRequest> {
+    public UserGenerateDepositRequester(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }
 
     @Override
-    public ValidatableResponse post(BaseModel model) {
+    public ValidatableResponse post(GenerateDepositRequest model) {
         return given()
                 .spec(requestSpecification)
                 .body(model)
-                .post("/api/v1/accounts/transfer")
+                .post("/api/v1/accounts/deposit")
                 .then()
                 .assertThat()
                 .spec(responseSpecification);
     }
 
     @Override
-    public ValidatableResponse put(BaseModel model) {
+    public ValidatableResponse put(GenerateDepositRequest model) {
         return null;
     }
 
     @Override
-    public ValidatableResponse get(String path) {
+    public ValidatableResponse get(GenerateDepositRequest model) {
         return given()
                 .spec(requestSpecification)
+                .pathParam("id", model.getId())
                 .when()
-                .get(path)
+                .get("/api/v1/accounts/{id}/transactions")
                 .then()
                 .assertThat()
                 .spec(responseSpecification);

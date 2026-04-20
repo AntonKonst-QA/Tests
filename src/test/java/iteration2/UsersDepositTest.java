@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.UserGenerateDepositRequest;
+import requests.UserGenerateDepositRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-public class UsersDepositTest {
+public class UsersDepositTest extends BaseTest{
     public static final int VALID_DEPOSIT = 5000;
     public static final int ID = 1;
     @Test
@@ -19,14 +19,14 @@ public class UsersDepositTest {
                 .balance(VALID_DEPOSIT)
                 .build();
 
-        UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+        UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                 RequestSpecs.authUser(),
                 ResponseSpecs.successResponse()
         );
         depositAction.post(body);
 
         // Проверяем результаты (GET)
-        depositAction.get("/api/v1/accounts/{id}/transactions");
+        depositAction.get(body);
     }
 
     @Nested
@@ -44,7 +44,7 @@ public class UsersDepositTest {
                     .balance(invalidDeposit)
                     .build();
 
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );
@@ -61,7 +61,7 @@ public class UsersDepositTest {
                     .id(0)
                     .balance(VALID_DEPOSIT)
                     .build();
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.forbiddenResponse()
             );
@@ -74,7 +74,7 @@ public class UsersDepositTest {
                     .id(2) // ID2 принадлежит другому пользователю
                     .balance(VALID_DEPOSIT)
                     .build();
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );
@@ -91,7 +91,7 @@ public class UsersDepositTest {
                     .id(ID)
                     .balance(5000.01)
                     .build();
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );
@@ -104,7 +104,7 @@ public class UsersDepositTest {
                     .id(ID)
                     .balance(4999.99)
                     .build();
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.successResponse()
             );
@@ -117,7 +117,7 @@ public class UsersDepositTest {
                     .id(ID)
                     .balance(0.01)
                     .build();
-            UserGenerateDepositRequest depositAction = new UserGenerateDepositRequest(
+            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.successResponse()
             );

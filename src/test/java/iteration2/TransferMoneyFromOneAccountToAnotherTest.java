@@ -1,53 +1,74 @@
 package iteration2;
 
 import models.GenerateTransferRequest;
+import models.GenerateTransferResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.UserGenerateTransferRequest;
+import requests.UserGenerateTransferRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-public class TransferMoneyFromOneAccountToAnotherTest {
+public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
     // Перевод на свой аккаунт
     @Test
     public void successTransferMoneyBetweenMyAccountTest() {
+        int senderId = 1;
+        int receiverId = 2;
+        double amount = 220.1;
+
         GenerateTransferRequest body = GenerateTransferRequest.builder()
-                .senderAccountId(1)
-                .receiverAccountId(2)
-                .amount(220.1)
+                .senderAccountId(senderId)
+                .receiverAccountId(receiverId)
+                .amount(amount)
                 .build();
 
-        UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                 RequestSpecs.authUser(),
                 ResponseSpecs.successResponse()
         );
 
-        transferAction.post(body);
+        GenerateTransferResponse response = transferAction.post(body)
+                .extract()
+                .as(GenerateTransferResponse.class);
+
+        softly.assertThat(response.getMessage())
+                .as("Проверка сообщения об успешном переводе")
+                .isEqualTo("Transfer successful");
 
         // Проверяем результаты (GET)
-        transferAction.get("/api/v1/accounts/{id}/transactions");
+        transferAction.get(body);
     }
 
     // Перевод на чужой аккаунт
     @Test
     public void successTransferMoneyToAnotherTest(){
+        int senderId = 1;
+        int receiverId = 3;
+        double amount = 0.65;
+
         GenerateTransferRequest body = GenerateTransferRequest.builder()
-                .senderAccountId(1)
-                .receiverAccountId(3)
-                .amount(0.65)
+                .senderAccountId(senderId)
+                .receiverAccountId(receiverId)
+                .amount(amount)
                 .build();
 
-        UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                 RequestSpecs.authUser(),
                 ResponseSpecs.successResponse()
         );
 
-        transferAction.post(body);
+        GenerateTransferResponse response = transferAction.post(body)
+                .extract()
+                .as(GenerateTransferResponse.class);
+
+        softly.assertThat(response.getMessage())
+                .as("Проверка сообщения об успешном переводе")
+                .isEqualTo("Transfer successful");
 
         // Проверяем результаты (GET)
-        transferAction.get("/api/v1/accounts/{id}/transactions");
+        transferAction.get(body);
     }
 
     // Перевод больше допустимого лимита
@@ -55,59 +76,91 @@ public class TransferMoneyFromOneAccountToAnotherTest {
     class LimitValuesTransferTests {
         @Test
         public void moreThanPermissibleAmountTest() {
+            int senderId = 1;
+            int receiverId = 2;
+            double amount = 10000.1;
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
-                    .senderAccountId(1)
-                    .receiverAccountId(2)
-                    .amount(10000.1)
+                    .senderAccountId(senderId)
+                    .receiverAccountId(receiverId)
+                    .amount(amount)
                     .build();
 
-            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+                    UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );
 
-            transferAction.post(body);
+            String response = transferAction.post(body)
+                    .extract()
+                    .asString();
+
+            softly.assertThat(response)
+                    .as("Проверка сообщения о неуспешном переводе")
+                    .contains("Invalid transfer");
+
 
             // Проверяем результаты (GET)
-            transferAction.get("/api/v1/accounts/{id}/transactions");
+            new UserGenerateTransferRequester(RequestSpecs.authUser(), ResponseSpecs.successResponse())
+                    .get(body);
         }
 
         @Test
         public void lessThanPermissibleAmountTest() {
+            int senderId = 1;
+            int receiverId = 2;
+            double amount = 9999.99;
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
-                    .senderAccountId(1)
-                    .receiverAccountId(2)
-                    .amount(9999.99)
+                    .senderAccountId(senderId)
+                    .receiverAccountId(receiverId)
+                    .amount(amount)
                     .build();
 
-            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.successResponse()
             );
 
-            transferAction.post(body);
+            GenerateTransferResponse response = transferAction.post(body)
+                    .extract()
+                    .as(GenerateTransferResponse.class);
+
+            softly.assertThat(response.getMessage())
+                    .as("Проверка сообщения об успешном переводе")
+                    .isEqualTo("Transfer successful");
 
             // Проверяем результаты (GET)
-            transferAction.get("/api/v1/accounts/{id}/transactions");
+            transferAction.get(body);
         }
 
         @Test
         public void moreThanZeroTest() {
+            int senderId = 1;
+            int receiverId = 2;
+            double amount = 0.01;
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
-                    .senderAccountId(1)
-                    .receiverAccountId(2)
-                    .amount(0.01)
+                    .senderAccountId(senderId)
+                    .receiverAccountId(receiverId)
+                    .amount(amount)
                     .build();
 
-            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.successResponse()
             );
 
-            transferAction.post(body);
+            GenerateTransferResponse response = transferAction.post(body)
+                    .extract()
+                    .as(GenerateTransferResponse.class);
+
+            softly.assertThat(response.getMessage())
+                    .as("Проверка сообщения об успешном переводе")
+                    .isEqualTo("Transfer successful");
 
             // Проверяем результаты (GET)
-            transferAction.get("/api/v1/accounts/{id}/transactions");
+            transferAction.get(body);
         }
     }
 
@@ -122,21 +175,30 @@ public class TransferMoneyFromOneAccountToAnotherTest {
         })
 
         public  void failedTransferMoneyTest(double invalidDeposit) {
+            int senderId = 1;
+            int receiverId = 2;
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
-                    .senderAccountId(1)
-                    .receiverAccountId(2)
+                    .senderAccountId(senderId)
+                    .receiverAccountId(receiverId)
                     .amount(invalidDeposit)
                     .build();
 
-            UserGenerateTransferRequest transferAction = new UserGenerateTransferRequest(
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
                     RequestSpecs.authUser(),
                     ResponseSpecs.badRequestResponse()
             );
 
-            transferAction.post(body);
+            String response = transferAction.post(body)
+                    .extract()
+                    .asString();
 
+            softly.assertThat(response)
+                    .as("Проверка текста ошибки при не успешном переоводе")
+                    .contains("Invalid transfer");
             // Проверяем результаты (GET)
-            transferAction.get("/api/v1/accounts/{id}/transactions");
+            new UserGenerateTransferRequester(RequestSpecs.authUser(), ResponseSpecs.successResponse())
+                    .get(body);
         }
     }
 }

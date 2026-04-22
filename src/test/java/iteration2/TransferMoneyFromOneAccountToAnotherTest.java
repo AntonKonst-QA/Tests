@@ -18,27 +18,39 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
         int receiverId = 2;
         double amount = 220.1;
 
+        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                RequestSpecs.authUser(),
+                ResponseSpecs.successResponse()
+        );
+
         GenerateTransferRequest body = GenerateTransferRequest.builder()
                 .senderAccountId(senderId)
                 .receiverAccountId(receiverId)
                 .amount(amount)
                 .build();
 
-        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                RequestSpecs.authUser(),
-                ResponseSpecs.successResponse()
-        );
+        // Проверяем баланс (GET) до перевода
+        double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+        double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
         GenerateTransferResponse response = transferAction.post(body)
                 .extract()
                 .as(GenerateTransferResponse.class);
 
+        double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+        double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
         softly.assertThat(response.getMessage())
-                .as("Проверка сообщения об успешном переводе")
+                .as("Сообщение об успешном переводе")
                 .isEqualTo("Transfer successful");
 
-        // Проверяем результаты (GET)
-        transferAction.get(body);
+        softly.assertThat(senderAfter)
+                .as("Списание средств у отправителя")
+                .isEqualTo(senderBefore - amount);
+
+        softly.assertThat(receiverAfter)
+                .as("Зачисление средств у получателя")
+                .isEqualTo(receiverBefore + amount);
     }
 
     // Перевод на чужой аккаунт
@@ -48,27 +60,39 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
         int receiverId = 3;
         double amount = 0.65;
 
+        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                RequestSpecs.authUser(),
+                ResponseSpecs.successResponse()
+        );
+
         GenerateTransferRequest body = GenerateTransferRequest.builder()
                 .senderAccountId(senderId)
                 .receiverAccountId(receiverId)
                 .amount(amount)
                 .build();
 
-        UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                RequestSpecs.authUser(),
-                ResponseSpecs.successResponse()
-        );
+        // Проверяем баланс (GET) до перевода
+        double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+        double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
         GenerateTransferResponse response = transferAction.post(body)
                 .extract()
                 .as(GenerateTransferResponse.class);
 
+        double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+        double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
         softly.assertThat(response.getMessage())
-                .as("Проверка сообщения об успешном переводе")
+                .as("Сообщение об успешном переводе")
                 .isEqualTo("Transfer successful");
 
-        // Проверяем результаты (GET)
-        transferAction.get(body);
+        softly.assertThat(senderAfter)
+                .as("Списание средств у отправителя")
+                .isEqualTo(senderBefore - amount);
+
+        softly.assertThat(receiverAfter)
+                .as("Зачисление средств у получателя")
+                .isEqualTo(receiverBefore + amount);
     }
 
     // Перевод больше допустимого лимита
@@ -80,29 +104,39 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             int receiverId = 2;
             double amount = 10000.1;
 
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
                     .senderAccountId(senderId)
                     .receiverAccountId(receiverId)
                     .amount(amount)
                     .build();
 
-                    UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.badRequestResponse()
-            );
+            // Проверяем баланс (GET) до перевода
+            double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
             String response = transferAction.post(body)
                     .extract()
                     .asString();
 
+            double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
             softly.assertThat(response)
-                    .as("Проверка сообщения о неуспешном переводе")
+                    .as("Сообщение о неуспешном переводе")
                     .contains("Invalid transfer");
 
+            softly.assertThat(senderAfter)
+                    .as("Баланс отправителя не должен измениться")
+                    .isEqualTo(senderBefore);
 
-            // Проверяем результаты (GET)
-            new UserGenerateTransferRequester(RequestSpecs.authUser(), ResponseSpecs.successResponse())
-                    .get(body);
+            softly.assertThat(receiverAfter)
+                    .as("Баланс получателя не должен измениться")
+                    .isEqualTo(receiverBefore);
         }
 
         @Test
@@ -111,27 +145,38 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             int receiverId = 2;
             double amount = 9999.99;
 
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
             GenerateTransferRequest body = GenerateTransferRequest.builder()
                     .senderAccountId(senderId)
                     .receiverAccountId(receiverId)
                     .amount(amount)
                     .build();
 
-            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+            // Проверяем баланс (GET) до перевода
+            double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
             GenerateTransferResponse response = transferAction.post(body)
                     .extract()
                     .as(GenerateTransferResponse.class);
 
+            double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
             softly.assertThat(response.getMessage())
-                    .as("Проверка сообщения об успешном переводе")
+                    .as("Сообщение об успешном переводе")
                     .isEqualTo("Transfer successful");
 
-            // Проверяем результаты (GET)
-            transferAction.get(body);
+            softly.assertThat(senderAfter)
+                    .as("Списание средств у отправителя")
+                    .isEqualTo(senderBefore - amount);
+
+            softly.assertThat(receiverAfter)
+                    .as("Зачисление средств у получателя")
+                    .isEqualTo(receiverBefore + amount);
         }
 
         @Test
@@ -140,33 +185,45 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             int receiverId = 2;
             double amount = 0.01;
 
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.successResponse()
+            );
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
                     .senderAccountId(senderId)
                     .receiverAccountId(receiverId)
                     .amount(amount)
                     .build();
 
-            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+            // Проверяем баланс (GET) до перевода
+            double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
             GenerateTransferResponse response = transferAction.post(body)
                     .extract()
                     .as(GenerateTransferResponse.class);
 
+            double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
             softly.assertThat(response.getMessage())
-                    .as("Проверка сообщения об успешном переводе")
+                    .as("Сообщение об успешном переводе")
                     .isEqualTo("Transfer successful");
 
-            // Проверяем результаты (GET)
-            transferAction.get(body);
+            softly.assertThat(senderAfter)
+                    .as("Списание средств у отправителя")
+                    .isEqualTo(senderBefore - amount);
+
+            softly.assertThat(receiverAfter)
+                    .as("Зачисление средств у получателя")
+                    .isEqualTo(receiverBefore + amount);
         }
     }
 
     @Nested
     class NegativeTests {
-        @ParameterizedTest
+        @ParameterizedTest(name = "Проверка перевода с некорректной суммой: {0}")
         @ValueSource(doubles = {
                 0.0, // Нет суммы на депозите
                 10000.1, // Превышение максимальную сумму перевода
@@ -178,27 +235,40 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             int senderId = 1;
             int receiverId = 2;
 
+            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
+                    RequestSpecs.authUser(),
+                    ResponseSpecs.badRequestResponse()
+            );
+
             GenerateTransferRequest body = GenerateTransferRequest.builder()
                     .senderAccountId(senderId)
                     .receiverAccountId(receiverId)
                     .amount(invalidDeposit)
                     .build();
 
-            UserGenerateTransferRequester transferAction = new UserGenerateTransferRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.badRequestResponse()
-            );
+            // Проверяем баланс (GET) до перевода
+
+            double senderBefore = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverBefore = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
 
             String response = transferAction.post(body)
                     .extract()
                     .asString();
 
+            double senderAfter = Math.round(transferAction.getAccount(senderId).getBalance() * 100.0) / 100.0;
+            double receiverAfter = Math.round(transferAction.getAccount(receiverId).getBalance() * 100.0) / 100.0;
+
             softly.assertThat(response)
-                    .as("Проверка текста ошибки при не успешном переоводе")
+                    .as("Сообщение о неуспешном переводе")
                     .contains("Invalid transfer");
-            // Проверяем результаты (GET)
-            new UserGenerateTransferRequester(RequestSpecs.authUser(), ResponseSpecs.successResponse())
-                    .get(body);
+
+            softly.assertThat(senderAfter)
+                    .as("Сумма у отправителя не изменилась")
+                    .isEqualTo(senderBefore);
+
+            softly.assertThat(receiverAfter)
+                    .as("Сумма у получателя не изменилась")
+                    .isEqualTo(receiverBefore);
         }
     }
 }

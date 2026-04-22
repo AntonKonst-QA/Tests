@@ -30,6 +30,11 @@ public class ChangeUserNameRequester extends Request <GenerateChangeUserNameRequ
 
     @Override
     public ValidatableResponse get(GenerateChangeUserNameRequest model) {
+        return get();
+    }
+
+    // Создал метод без параметров, чтобы гет запрос был более гибким
+    public ValidatableResponse get() {
         return given()
                 .spec(requestSpecification)
                 .when()

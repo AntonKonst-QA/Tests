@@ -3,6 +3,7 @@ package requests;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
+import models.AccountModel;
 import models.GenerateTransferRequest;
 import models.TransactionModel;
 
@@ -54,4 +55,15 @@ public class UserGenerateTransferRequester extends Request <GenerateTransferRequ
                 .jsonPath()
                 .getList(".", TransactionModel.class);
     }
+
+    public AccountModel getAccount(int accountId) {
+        return given()
+                .spec(requestSpecification)
+                .when()
+                .get("/api/v1/customer/accounts")
+                .then()
+                .spec(specs.ResponseSpecs.successResponse())
+                .extract()
+                .jsonPath()
+                .getObject("find { it.id == " + accountId + " }", AccountModel.class);    }
 }

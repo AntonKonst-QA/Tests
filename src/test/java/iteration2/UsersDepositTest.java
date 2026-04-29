@@ -5,40 +5,26 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.UserGenerateDepositRequester;
-import specs.RequestSpecs;
 import specs.ResponseSpecs;
+import steps.AccountSteps;
 import static org.assertj.core.api.Assertions.within;
 
 public class UsersDepositTest extends BaseTest{
+    private final AccountSteps accountSteps = new AccountSteps();
     public static final int VALID_DEPOSIT = 5000;
     public static final int ID = 1;
     @Test
     public void successGenerateDepositTest() {
-        UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                RequestSpecs.authUser(),
-                ResponseSpecs.successResponse()
-        );
+        double balanceBefore = accountSteps.getBalance(ID);
 
         GenerateDepositRequest body = GenerateDepositRequest.builder()
                 .id(ID)
                 .balance(VALID_DEPOSIT)
                 .build();
 
-        double balanceBefore = depositAction.get(body)
-                .extract()
-                .jsonPath()
-                .getDouble("[0].balance");
+        accountSteps.deposit(body);
 
-        depositAction.post(body);
-
-        // Проверяем результаты (GET)
-        double balanceAfter = depositAction.get(body)
-                .extract()
-                .jsonPath()
-                .getDouble("[0].balance");
-
-        softly.assertThat(balanceAfter)
+        softly.assertThat(accountSteps.getBalance(ID))
                 .as("Баланс должен увеличиться на " + VALID_DEPOSIT)
                 .isEqualTo(balanceBefore + VALID_DEPOSIT, within(0.001));
     }
@@ -52,32 +38,19 @@ public class UsersDepositTest extends BaseTest{
                 -5000 // Отрицательная сумма не депозите
         })
 
-        public  void failedGenerateDepositTest(int invalidDeposit) {
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+        public  void failedGenerateDepositTest(double invalidDeposit) {
+
+            double balanceBefore = accountSteps.getBalance(ID);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(1)
+                    .id(ID)
                     .balance(invalidDeposit)
                     .build();
 
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
+            accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
-            depositAction.post(body)
-                    .spec(ResponseSpecs.badRequestResponse());
-
-            // Проверяем результаты (GET)
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
+            softly.assertThat(accountSteps.getBalance(ID))
+                    .as("Балан не должен измениться")
                     .isEqualTo(balanceBefore);
         }
     }
@@ -87,59 +60,28 @@ public class UsersDepositTest extends BaseTest{
 
         @Test
         public void depositToNonAccountTest() {
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.forbiddenResponse()
-            );
-
+            int nonExistentID = 0;
             GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(0)
+                    .id(nonExistentID)
                     .balance(VALID_DEPOSIT)
                     .build();
 
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            depositAction.post(body);
-
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
-                    .isEqualTo(balanceBefore);
+            accountSteps.depositExpectingError(body, ResponseSpecs.forbiddenResponse());
         }
 
         @Test
         public void depositToSomeOneElseAccountTest() {
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.badRequestResponse()
-            );
+            int alienId = 2;
+            double balanceBefore = accountSteps.getBalance(alienId);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(2) // ID2 принадлежит другому пользователю
+                    .id(alienId)
                     .balance(VALID_DEPOSIT)
                     .build();
 
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
+            accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
-
-            depositAction.post(body);
-
-            // Проверяем результаты (GET)
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
+            softly.assertThat(accountSteps.getBalance(alienId))
                     .as("Баланс не должен измениться")
                     .isEqualTo(balanceBefore);
         }
@@ -150,30 +92,17 @@ public class UsersDepositTest extends BaseTest{
 
         @Test
         public  void moreThanPermissibleAmountTest() {
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.badRequestResponse()
-            );
+            double tooMuch = 5000.01;
+            double balanceBefore = accountSteps.getBalance(ID);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
                     .id(ID)
-                    .balance(5000.01)
+                    .balance(tooMuch)
                     .build();
 
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
+            accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
-            depositAction.post(body);
-
-            // Проверяем результаты (GET)
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
+            softly.assertThat(accountSteps.getBalance(ID))
                     .as("Баланс не должен измениться")
                     .isEqualTo(balanceBefore);
         }
@@ -181,32 +110,11 @@ public class UsersDepositTest extends BaseTest{
         @Test
         public  void maxAmountValidTest() {
             double depositAmount = 4999.99;
+            double balanceBefore = accountSteps.getBalance(ID);
 
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(depositAmount).build());
 
-            GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(ID)
-                    .balance(depositAmount)
-                    .build();
-
-
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            depositAction.post(body);
-
-            // Проверяем результаты (GET)
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
+            softly.assertThat(accountSteps.getBalance(ID))
                     .as("Баланс увеличится на сумму " + depositAmount)
                     .isEqualTo(balanceBefore + depositAmount, within(0.001));
         }
@@ -214,32 +122,12 @@ public class UsersDepositTest extends BaseTest{
         @Test
         public  void moreThanZeroTest() {
             double depositAmount = 0.01;
+            double balanceBefore = accountSteps.getBalance(ID);
 
-            UserGenerateDepositRequester depositAction = new UserGenerateDepositRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(depositAmount).build());
 
-            GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(ID)
-                    .balance(depositAmount)
-                    .build();
-
-            double balanceBefore = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            depositAction.post(body);
-
-            // Проверяем результаты (GET)
-            double balanceAfter = depositAction.get(body)
-                    .extract()
-                    .jsonPath()
-                    .getDouble("[0].balance");
-
-            softly.assertThat(balanceAfter)
-                    .as("Баланс изменится на сумму " + depositAmount)
+            softly.assertThat(accountSteps.getBalance(ID))
+                    .as("Баланс увеличится на сумму " + depositAmount)
                     .isEqualTo(balanceBefore + depositAmount, within(0.001));
         }
     }

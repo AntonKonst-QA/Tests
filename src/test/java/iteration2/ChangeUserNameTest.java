@@ -1,37 +1,22 @@
 package iteration2;
 
-import generators.RandomData;
+import generators.RandomModelGenerator;
 import models.GenerateChangeUserNameRequest;
-import models.GenerateChangeUserNameResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import requests.ChangeUserNameRequester;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import steps.UserSteps;
+import utils.ModelComparator;
 
 public class ChangeUserNameTest extends BaseTest{
+    private UserSteps userSteps = new UserSteps();
     @Test
     public void successChangeUserName() {
-        String expectedName = RandomData.getUsername();
+        var requestBody = RandomModelGenerator.generate(GenerateChangeUserNameRequest.class);
+        var response = userSteps.changeName(requestBody);
 
-        ChangeUserNameRequester changeUserNameAction = new ChangeUserNameRequester(
-                RequestSpecs.authUser(),
-                ResponseSpecs.successResponse()
-        );
-
-        GenerateChangeUserNameRequest body = GenerateChangeUserNameRequest.builder()
-                .name(expectedName)
-                .build();
-
-        GenerateChangeUserNameResponse response = changeUserNameAction.put(body)
-                .extract()
-                .as(GenerateChangeUserNameResponse.class);
-
-        softly.assertThat(response.getCustomer().getName())
-                .as("Имя в ответе совпадает с ожидаемым")
-                .isEqualTo(expectedName);
+        ModelComparator.compare(requestBody,response);
 
         softly.assertThat(response.getMessage())
                 .as("Сообщение об успешном изменении User Name")
@@ -50,38 +35,15 @@ public class ChangeUserNameTest extends BaseTest{
         })
 
         public void failChangeName(String invalidName) {
-            //  Для получения имени использую спецификацию с ответом 200.
-            ChangeUserNameRequester checkAction = new ChangeUserNameRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.successResponse()
-            );
+            String nameBefore = userSteps.getProfile().getName();
 
-            // Для проверки смены имени использую негативную спецификацию
-            ChangeUserNameRequester nameAction = new ChangeUserNameRequester(
-                    RequestSpecs.authUser(),
-                    ResponseSpecs.badRequestResponse()
-            );
+            var body = GenerateChangeUserNameRequest.builder().name(invalidName).build();
 
-            String nameBefore = checkAction.get()
-                    .extract()
-                    .jsonPath()
-                    .getString("name");
+            String actualError = userSteps.changeNameAndExpectError(body);
 
-            GenerateChangeUserNameRequest body = GenerateChangeUserNameRequest.builder()
-                    .name(invalidName)
-                    .build();
+            String nameAfter = userSteps.getProfile().getName();
 
-            String responseBody = nameAction.put(body).extract().asString();
-
-            String nameAfter = checkAction.get(GenerateChangeUserNameRequest.builder().build())
-                    .extract()
-                    .jsonPath()
-                    .getString("name");
-
-            softly.assertThat(responseBody)
-                    .as("Ошибка смены имени " + invalidName)
-                    .isNotBlank();
-
+            softly.assertThat(actualError).contains("Name must contain two words");
             softly.assertThat(nameAfter)
                     .as("Имя не должно измениться")
                     .isEqualTo(nameBefore);

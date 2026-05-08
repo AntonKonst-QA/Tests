@@ -50,7 +50,7 @@ public class UsersDepositTest extends BaseTest{
             accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
             softly.assertThat(accountSteps.getBalance(ID))
-                    .as("Балан не должен измениться")
+                    .as("Баланс не должен измениться")
                     .isEqualTo(balanceBefore);
         }
     }

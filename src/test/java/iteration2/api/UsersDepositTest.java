@@ -1,4 +1,4 @@
-package iteration2;
+package iteration2.api;
 
 import models.GenerateDepositRequest;
 import org.junit.jupiter.api.Nested;

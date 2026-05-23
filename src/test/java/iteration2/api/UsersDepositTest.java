@@ -1,12 +1,12 @@
 package iteration2.api;
 
-import models.GenerateDepositRequest;
+import api.models.GenerateDepositRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import specs.ResponseSpecs;
-import steps.AccountSteps;
+import api.specs.ResponseSpecs;
+import api.steps.AccountSteps;
 import static org.assertj.core.api.Assertions.within;
 
 public class UsersDepositTest extends BaseTest{

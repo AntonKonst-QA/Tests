@@ -1,12 +1,12 @@
 package iteration2.api;
 
-import models.GenerateTransferRequest;
+import api.models.GenerateTransferRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import steps.AccountSteps;
+import api.steps.AccountSteps;
 
 import static org.assertj.core.api.AssertionsForClassTypes.within;
 

@@ -1,14 +1,19 @@
 package iteration2.ui;
 
 import api.configs.Config;
-import api.models.BaseModel;
 import com.codeborne.selenide.Configuration;
+import common.extensions.BrowserMatchExtension;
+import common.extensions.UserSessionExtension;
+import iteration2.api.BaseTest;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ui.pages.LoginPage;
 import ui.pages.UserDashboard;
 import java.util.Map;
 
-public class BaseUiTest extends BaseModel {
+@ExtendWith(UserSessionExtension.class)
+@ExtendWith(BrowserMatchExtension.class)
+public class BaseUiTest extends BaseTest {
 
     @BeforeAll
     public static void setupSelenoid(){
@@ -24,6 +29,6 @@ public class BaseUiTest extends BaseModel {
     public UserDashboard authAsUser(String username, String password) {
         return new LoginPage()
                 .open()
-                .login(username, password);
+                .authAsUser(username, password);
     }
 }

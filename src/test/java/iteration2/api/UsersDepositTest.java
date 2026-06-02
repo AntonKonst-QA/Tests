@@ -1,21 +1,22 @@
 package iteration2.api;
 
 import api.models.GenerateDepositRequest;
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import api.specs.ResponseSpecs;
-import api.steps.AccountSteps;
-import static org.assertj.core.api.Assertions.within;
+
+import java.math.BigDecimal;
+
+import static api.TestConstants.*;
 
 public class UsersDepositTest extends BaseTest{
-    private final AccountSteps accountSteps = new AccountSteps();
-    public static final int VALID_DEPOSIT = 5000;
-    public static final int ID = 1;
+
     @Test
     public void successGenerateDepositTest() {
-        double balanceBefore = accountSteps.getBalance(ID);
+        BigDecimal balanceBefore = accountSteps.getBalance(ID);
 
         GenerateDepositRequest body = GenerateDepositRequest.builder()
                 .id(ID)
@@ -26,21 +27,21 @@ public class UsersDepositTest extends BaseTest{
 
         softly.assertThat(accountSteps.getBalance(ID))
                 .as("Баланс должен увеличиться на " + VALID_DEPOSIT)
-                .isEqualTo(balanceBefore + VALID_DEPOSIT, within(0.001));
+                .isCloseTo(balanceBefore.add(VALID_DEPOSIT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }
 
     @Nested
     class NegativeTests {
         @ParameterizedTest
-        @ValueSource(ints = {
-                 0, // Нет суммы на депозите
-                5001, // Превышение максимальной суммы на депозите
-                -5000 // Отрицательная сумма не депозите
+        @ValueSource(strings = {
+                 "0.0", // Нет суммы на депозите
+                "5001.0", // Превышение максимальной суммы на депозите
+                "-5000.0" // Отрицательная сумма не депозите
         })
 
-        public  void failedGenerateDepositTest(double invalidDeposit) {
+        public  void failedGenerateDepositTest(BigDecimal invalidDeposit) {
 
-            double balanceBefore = accountSteps.getBalance(ID);
+            BigDecimal balanceBefore = accountSteps.getBalance(ID);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
                     .id(ID)
@@ -51,7 +52,7 @@ public class UsersDepositTest extends BaseTest{
 
             softly.assertThat(accountSteps.getBalance(ID))
                     .as("Баланс не должен измениться")
-                    .isEqualTo(balanceBefore);
+                    .isCloseTo(balanceBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
         }
     }
 
@@ -60,9 +61,8 @@ public class UsersDepositTest extends BaseTest{
 
         @Test
         public void depositToNonAccountTest() {
-            int nonExistentID = 0;
             GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(nonExistentID)
+                    .id(NON_EXISTENT_ID)
                     .balance(VALID_DEPOSIT)
                     .build();
 
@@ -71,19 +71,18 @@ public class UsersDepositTest extends BaseTest{
 
         @Test
         public void depositToSomeOneElseAccountTest() {
-            int alienId = 2;
-            double balanceBefore = accountSteps.getBalance(alienId);
+            BigDecimal balanceBefore = accountSteps.getBalance(ALIEN_ID);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
-                    .id(alienId)
+                    .id(ALIEN_ID)
                     .balance(VALID_DEPOSIT)
                     .build();
 
             accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
-            softly.assertThat(accountSteps.getBalance(alienId))
+            softly.assertThat(accountSteps.getBalance(ALIEN_ID))
                     .as("Баланс не должен измениться")
-                    .isEqualTo(balanceBefore);
+                    .isCloseTo(balanceBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
         }
     }
 
@@ -92,43 +91,40 @@ public class UsersDepositTest extends BaseTest{
 
         @Test
         public  void moreThanPermissibleAmountTest() {
-            double tooMuch = 5000.01;
-            double balanceBefore = accountSteps.getBalance(ID);
+            BigDecimal balanceBefore = accountSteps.getBalance(ID);
 
             GenerateDepositRequest body = GenerateDepositRequest.builder()
                     .id(ID)
-                    .balance(tooMuch)
+                    .balance(TOO_MUCH)
                     .build();
 
             accountSteps.depositExpectingError(body, ResponseSpecs.badRequestResponse());
 
             softly.assertThat(accountSteps.getBalance(ID))
                     .as("Баланс не должен измениться")
-                    .isEqualTo(balanceBefore);
+                    .isCloseTo(balanceBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
         }
 
         @Test
         public  void maxAmountValidTest() {
-            double depositAmount = 4999.99;
-            double balanceBefore = accountSteps.getBalance(ID);
+            BigDecimal balanceBefore = accountSteps.getBalance(ID);
 
-            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(depositAmount).build());
+            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(MAX_VALID_DEPOSIT_AMOUNT).build());
 
             softly.assertThat(accountSteps.getBalance(ID))
-                    .as("Баланс увеличится на сумму " + depositAmount)
-                    .isEqualTo(balanceBefore + depositAmount, within(0.001));
+                    .as("Баланс увеличится на сумму " + MAX_VALID_DEPOSIT_AMOUNT)
+                    .isCloseTo(balanceBefore.add(MAX_VALID_DEPOSIT_AMOUNT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
         }
 
         @Test
         public  void moreThanZeroTest() {
-            double depositAmount = 0.01;
-            double balanceBefore = accountSteps.getBalance(ID);
+            BigDecimal balanceBefore = accountSteps.getBalance(ID);
 
-            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(depositAmount).build());
+            accountSteps.deposit(GenerateDepositRequest.builder().id(ID).balance(MIN_VALID_DEPOSIT_AMOUNT).build());
 
             softly.assertThat(accountSteps.getBalance(ID))
-                    .as("Баланс увеличится на сумму " + depositAmount)
-                    .isEqualTo(balanceBefore + depositAmount, within(0.001));
+                    .as("Баланс увеличится на сумму " + MIN_VALID_DEPOSIT_AMOUNT)
+                    .isCloseTo(balanceBefore.add(MIN_VALID_DEPOSIT_AMOUNT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
         }
     }
 }

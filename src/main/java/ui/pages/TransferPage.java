@@ -3,9 +3,11 @@ package ui.pages;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
+import org.apache.commons.codec.cli.Digest;
 import org.assertj.core.api.Assertions;
 import org.openqa.selenium.Alert;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -21,8 +23,8 @@ public class TransferPage extends BasePage<TransferPage> {
 
     public static final int SENDER_ID = 1;
     public static final String RECEIVER_ACC_NAME = "ACC4";
-    public static final int VALID_TRANSFER = 4;
-    public static final int INVALID_TRANSFER = 0;
+    public static final BigDecimal VALID_TRANSFER = new BigDecimal("4");
+    public static final BigDecimal INVALID_TRANSFER = new BigDecimal("0");
     public static String recipientAccount = "ACC1";
     public static String recipientName = "kate19981";
 
@@ -31,7 +33,7 @@ public class TransferPage extends BasePage<TransferPage> {
         return "/transfer";
     }
 
-    public TransferPage makeTransfer(String accountFrom, String recipientName, String recipientAccount, int amount) {
+    public TransferPage makeTransfer(String accountFrom, String recipientName, String recipientAccount, BigDecimal amount) {
         accountSelector.shouldBe(Condition.visible, Duration.ofSeconds(5)).selectOptionContainingText(accountFrom);
         recipientNameInput.setValue(recipientName);
         recipientAccountInput.setValue(recipientAccount);

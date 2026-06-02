@@ -7,6 +7,8 @@ import org.assertj.core.api.Assertions;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 
+import java.math.BigDecimal;
+
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.switchTo;
 
@@ -16,8 +18,8 @@ public class DepositPage extends BasePage<DepositPage> {
     private final SelenideElement amountInput = $(By.xpath("//input[@placeholder='Enter amount']"));
     private final SelenideElement depositButton = $(By.xpath("//button[contains(text(), 'Deposit')]"));
     public static String accountNumber = "ACC1";
-    public static final int VALID_DEPOSIT = 500;
-    public static final int INVALID_DEPOSIT = 0;
+    public static final BigDecimal VALID_DEPOSIT = new BigDecimal("500");
+    public static final BigDecimal INVALID_DEPOSIT = new BigDecimal("0");
     public static final int ID = 1;
 
     @Override
@@ -25,7 +27,7 @@ public class DepositPage extends BasePage<DepositPage> {
         return "/deposit";
     }
 
-    public DepositPage makeDeposit(String account, int amount) {
+    public DepositPage makeDeposit(String account, BigDecimal amount) {
         accountSelector.shouldBe(Condition.visible).selectOptionContainingText(account);
         amountInput.setValue(String.valueOf(amount));
         depositButton.click();

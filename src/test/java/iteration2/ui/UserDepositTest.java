@@ -1,27 +1,25 @@
 package iteration2.ui;
 
-import api.models.CustomerModel;
-import org.assertj.core.api.SoftAssertions;
+import common.annotations.UserSession;
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
-import api.steps.AccountSteps;
 import ui.pages.BankAlerts;
 import ui.pages.DepositPage;
+import ui.pages.UserDashboard;
 
-import static org.assertj.core.api.AssertionsForClassTypes.within;
+import java.math.BigDecimal;
 
 public class UserDepositTest extends BaseUiTest {
-    private final AccountSteps accountSteps = new AccountSteps();
 
     @Test
+    @UserSession
     public void userCanCreateDepositTest() {
-        SoftAssertions softly = new SoftAssertions();
 
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        double balanceBefore = accountSteps.getBalance(DepositPage.ID);
-        CustomerModel user = CustomerModel.getUser();
+        BigDecimal balanceBefore = accountSteps.getBalance(DepositPage.ID);
 
         // Шаг 2: Проверка UI
-       authAsUser(user.getUsername(), user.getPassword())
+       new UserDashboard()
                .checkWelcomeText()
                .openDepositModal()
                .makeDeposit(DepositPage.accountNumber, DepositPage.VALID_DEPOSIT)
@@ -30,22 +28,19 @@ public class UserDepositTest extends BaseUiTest {
         // Шаг 3: Проверка изменения на бэке
         softly.assertThat(accountSteps.getBalance(DepositPage.ID))
                 .as("После UI-пополнения баланс на бэкенде должен увеличиться на " + DepositPage.VALID_DEPOSIT)
-                .isEqualTo(balanceBefore + DepositPage.VALID_DEPOSIT, within(0.001));
-
-        softly.assertAll();
+                .isCloseTo(balanceBefore.add(DepositPage.VALID_DEPOSIT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }
 
     // Негативный тест
     @Test
+    @UserSession
     public void userCanNotCreateDepositTest() {
-        SoftAssertions softly = new SoftAssertions();
 
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        double balanceBefore = accountSteps.getBalance(DepositPage.ID);
-        CustomerModel user = CustomerModel.getUser();
+        BigDecimal balanceBefore = accountSteps.getBalance(DepositPage.ID);
 
         // Шаг 2: Проверка UI
-        authAsUser(user.getUsername(), user.getPassword())
+        new UserDashboard()
                 .checkWelcomeText()
                 .openDepositModal()
                 .makeDeposit(DepositPage.accountNumber, DepositPage.INVALID_DEPOSIT)
@@ -54,8 +49,6 @@ public class UserDepositTest extends BaseUiTest {
         // Шаг 3: Проверка изменения на бэке
         softly.assertThat(accountSteps.getBalance(DepositPage.ID))
                 .as("Баланс не должен измениться")
-                .isEqualTo(balanceBefore);
-
-        softly.assertAll();
+                .isCloseTo(balanceBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }
 }

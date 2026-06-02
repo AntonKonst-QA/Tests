@@ -25,9 +25,9 @@ public class RequestSpecs {
                 .setBasePath(Config.getProperty("apiVersion"));
     }
 
-    public static RequestSpecification authUser() {
+    public static RequestSpecification authUser(String username, String password) {
         return defaultRequestBuilder()
-                .setAuth(io.restassured.RestAssured.preemptive().basic("kate1998", "verysTRongPassword33$"))
+                .setAuth(io.restassured.RestAssured.preemptive().basic(username, password))
                 .build();
     }
 }

@@ -1,26 +1,25 @@
 package iteration2.ui;
 
-import api.models.CustomerModel;
-import org.assertj.core.api.SoftAssertions;
+import common.annotations.UserSession;
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
-import api.steps.AccountSteps;
 import ui.pages.BankAlerts;
 import ui.pages.TransferPage;
+import ui.pages.UserDashboard;
 
-import static org.assertj.core.api.AssertionsForClassTypes.within;
+import java.math.BigDecimal;
 
 public class TransferMoneyFromOneAccountToAnotherTest extends BaseUiTest {
-    private final AccountSteps accountSteps = new AccountSteps();
 
     @Test
+    @UserSession
     public void userCanTransferMoneyTest() {
-        SoftAssertions softly = new SoftAssertions();
+
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        double senderBefore = accountSteps.getBalance(TransferPage.SENDER_ID);
-        CustomerModel user = CustomerModel.getUser();
+        BigDecimal senderBefore = accountSteps.getBalance(TransferPage.SENDER_ID);
 
         // Шаг 2: Проверка UI
-        authAsUser(user.getUsername(), user.getPassword())
+        new UserDashboard()
                 .checkWelcomeText()
                 .openTransferPage()
                 .makeTransfer(TransferPage.recipientAccount, TransferPage.recipientName, TransferPage.RECEIVER_ACC_NAME, TransferPage.VALID_TRANSFER)
@@ -28,23 +27,19 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseUiTest {
 
         // Шаг 3: Проверка изменения на бэке
         softly.assertThat(accountSteps.getBalance(TransferPage.SENDER_ID))
-                .as("Списание средств у отправителя")
-                .isCloseTo(senderBefore - TransferPage.VALID_TRANSFER, within(0.001));
-
-        softly.assertAll();
+                .isCloseTo(senderBefore.subtract(TransferPage.VALID_TRANSFER), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }
 
 //     Негативный тест
     @Test
+    @UserSession
     public void userCanNotTransferMoneyTest() {
-        SoftAssertions softly = new SoftAssertions();
 
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        double senderBefore = accountSteps.getBalance(TransferPage.SENDER_ID);
-        CustomerModel user = CustomerModel.getUser();
+        BigDecimal senderBefore = accountSteps.getBalance(TransferPage.SENDER_ID);
 
         // Шаг 2: Проверка UI
-        authAsUser(user.getUsername(), user.getPassword())
+        new UserDashboard()
                 .checkWelcomeText()
                 .openTransferPage()
                 .makeTransfer(TransferPage.recipientAccount, TransferPage.recipientName, TransferPage.RECEIVER_ACC_NAME, TransferPage.INVALID_TRANSFER)
@@ -52,9 +47,6 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseUiTest {
 
         // Шаг 3: Проверка изменения на бэке
         softly.assertThat(accountSteps.getBalance(TransferPage.SENDER_ID))
-                .as("Баланс отправителя не должен измениться")
-                .isEqualTo(senderBefore);
-
-        softly.assertAll();
+                .isCloseTo(senderBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }
 }

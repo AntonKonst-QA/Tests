@@ -1,26 +1,23 @@
 package iteration2.ui;
 
-import api.models.CustomerModel;
-import org.assertj.core.api.SoftAssertions;
+import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
-import api.steps.UserSteps;
 import ui.pages.BankAlerts;
 import ui.pages.EditProfilePage;
+import ui.pages.UserDashboard;
 
 public class ChangeUserNameTest extends BaseUiTest {
-    private final UserSteps userSteps = new UserSteps();
 
     @Test
+    @UserSession
     public void userCanChangeUserName() {
-        SoftAssertions softly = new SoftAssertions();
 
         // Шаг 1: Запомнили имя пользователя на бэке ДО изменения имени пользователя
         String nameBefore = userSteps.getProfile().getName();
-        CustomerModel user = CustomerModel.getUser();
         String dynamicNewName = EditProfilePage.generateUniqueName();
 
         // Шаг 2: Проверка UI
-        authAsUser(user.getUsername(), user.getPassword())
+        new UserDashboard()
                 .checkWelcomeText()
                 .openProfilePage()
                 .changeName(dynamicNewName)
@@ -28,25 +25,21 @@ public class ChangeUserNameTest extends BaseUiTest {
 
         // Шаг 3: Проверка изменения на бэке
         String nameAfter = userSteps.getProfile().getName();
-        softly.assertThat(nameAfter)
-                .isNotEqualTo(nameBefore);
 
         softly.assertThat(nameAfter)
+                .isNotEqualTo(nameBefore)
                 .isEqualTo(dynamicNewName);
-
-        softly.assertAll();
     }
 
     @Test
+    @UserSession
     public void userCanNotChangeUserName() {
-        SoftAssertions softly = new SoftAssertions();
 
         // Шаг 1: Запомнили имя пользователя на бэке ДО изменения имени пользователя
         String nameBefore = userSteps.getProfile().getName();
-        CustomerModel user = CustomerModel.getUser();
 
         // Шаг 2: Проверка UI
-        authAsUser(user.getUsername(), user.getPassword())
+        new UserDashboard()
                 .checkWelcomeText()
                 .openProfilePage()
                 .changeName(EditProfilePage.INVALID_NEW_USERNAME)
@@ -55,11 +48,7 @@ public class ChangeUserNameTest extends BaseUiTest {
         // Шаг 3: Проверка отсутствия изменения на бэке
         String nameAfter = userSteps.getProfile().getName();
         softly.assertThat(nameAfter)
-                .isEqualTo(nameBefore);
-
-        softly.assertThat(nameAfter)
+                .isEqualTo(nameBefore)
                 .isNotEqualTo(EditProfilePage.INVALID_NEW_USERNAME);
-
-        softly.assertAll();
     }
 }

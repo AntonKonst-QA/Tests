@@ -1,5 +1,6 @@
 package api.generators;
 
+import com.mifmif.common.regex.Generex;
 import org.apache.commons.lang3.RandomStringUtils;
 
 public class RandomData {
@@ -13,5 +14,9 @@ public class RandomData {
                 RandomStringUtils.randomAlphabetic(5).toLowerCase();
 
         return firstName + " " + lastName;
+    }
+
+    public static String generateUniqueName() {
+        return new Generex("[A-Z][a-z]{5} [A-Z][a-z]{5}").random();
     }
 }

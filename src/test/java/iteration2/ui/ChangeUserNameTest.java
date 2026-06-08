@@ -1,5 +1,6 @@
 package iteration2.ui;
 
+import api.generators.RandomData;
 import common.annotations.UserSession;
 import org.junit.jupiter.api.Test;
 import ui.pages.BankAlerts;
@@ -14,7 +15,7 @@ public class ChangeUserNameTest extends BaseUiTest {
 
         // Шаг 1: Запомнили имя пользователя на бэке ДО изменения имени пользователя
         String nameBefore = userSteps.getProfile().getName();
-        String dynamicNewName = EditProfilePage.generateUniqueName();
+        String dynamicNewName = RandomData.generateUniqueName();
 
         // Шаг 2: Проверка UI
         new UserDashboard()

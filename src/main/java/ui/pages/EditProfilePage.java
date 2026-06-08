@@ -33,8 +33,4 @@ public class EditProfilePage extends BasePage<EditProfilePage> {
         alert.accept();
         return this;
     }
-
-    public static String generateUniqueName() {
-        return new Generex("[A-Z][a-z]{5} [A-Z][a-z]{5}").random();
-    }
 }

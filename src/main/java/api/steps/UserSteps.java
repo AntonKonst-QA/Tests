@@ -30,12 +30,12 @@ public class UserSteps {
         return validatedRequester().put(body);
     }
 
-    public String changeNameAndExpectError(GenerateChangeUserNameRequest body) {
-        return new ValidatedCrudRequester<GenerateChangeUserNameRequest, BaseModel>(
+    public void changeNameAndExpectError(GenerateChangeUserNameRequest body) {
+         new ValidatedCrudRequester<GenerateChangeUserNameRequest, BaseModel>(
                 RequestSpecs.authUser(this.username, this.password),
                 Endpoint.USER_NAME,
                 ResponseSpecs.badRequestResponse()
-        ).getCrudRequester().put(body).extract().asString();
+        ).put(body);
     }
 
     public List<TransactionModel> getTransactionsForAccount(int accountId) {

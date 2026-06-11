@@ -2,6 +2,8 @@ package api.generators;
 
 import com.mifmif.common.regex.Generex;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.Random;
 
@@ -29,6 +31,10 @@ public class RandomModelGenerator {
                     value = generateDefaultValue(field.getType());
                 }
 
+                if (Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers())) {
+                    continue;
+                }
+
                 field.set(entity, value);
             }
             return entity;
@@ -39,6 +45,7 @@ public class RandomModelGenerator {
 
     private static Object generateDefaultValue(Class<?> type) {
         if (type == String.class) return UUID.randomUUID().toString().substring(0, 8);
+        if (type == BigDecimal.class) return BigDecimal.valueOf(RANDOM.nextInt(10000));
         if (type == Integer.class || type == int.class) return RANDOM.nextInt(1000);
         if (type == Double.class || type == double.class) return RANDOM.nextDouble();
         if (type == Boolean.class || type == boolean.class) return RANDOM.nextBoolean();

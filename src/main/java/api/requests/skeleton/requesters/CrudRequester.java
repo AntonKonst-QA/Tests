@@ -7,6 +7,10 @@ import api.models.BaseModel;
 import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.HttpRequest;
 import api.requests.skeleton.interfaces.CrudEndpointInterface;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Validate;
+
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
 
 public class CrudRequester extends HttpRequest implements CrudEndpointInterface<BaseModel, ValidatableResponse> {
@@ -54,6 +58,11 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface<
                 .get(endpoint.getUrl() + "/" + id)
                 .then()
                 .spec(responseSpecification);
+    }
+
+    @Override
+    public List<ValidatableResponse> getAll() {
+        return null;
     }
 
     public ValidatableResponse getWithPathParam(String paramName, Object value) {

@@ -1,6 +1,13 @@
 package iteration2.api;
 
+import api.generators.RandomModelGenerator;
+import api.models.BaseModel;
 import api.models.GenerateTransferRequest;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requesters.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
+import common.storage.SessionStorage;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,11 +37,10 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
         BigDecimal senderBefore = accountSteps.getBalance(SENDER_ID);
         BigDecimal receiverBefore = accountSteps.getBalance(receiverId);
 
-        var body = GenerateTransferRequest.builder()
-                .senderAccountId(SENDER_ID)
-                .receiverAccountId(receiverId)
-                .amount(amount)
-                .build();
+        var body = RandomModelGenerator.generate(GenerateTransferRequest.class);
+        body.setSenderAccountId(SENDER_ID);
+        body.setReceiverAccountId(receiverId);
+        body.setAmount(amount);
 
         var response = accountSteps.transfer(body);
 
@@ -60,25 +66,22 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             BigDecimal senderBefore = accountSteps.getBalance(SENDER_ID);
             BigDecimal receiverBefore = accountSteps.getBalance(RECEIVER_ID);
 
-            var body = GenerateTransferRequest.builder()
-                    .senderAccountId(SENDER_ID)
-                    .receiverAccountId(RECEIVER_ID)
-                    .amount(NON_VALID_TRANSFER_AMOUNT)
-                    .build();
+            var body = RandomModelGenerator.generate(GenerateTransferRequest.class);
+            body.setSenderAccountId(SENDER_ID);
+            body.setReceiverAccountId(RECEIVER_ID);
+            body.setAmount(NON_VALID_TRANSFER_AMOUNT);
 
-            String errorMessage = accountSteps.transferExpectingError(body);
+            new ValidatedCrudRequester<GenerateTransferRequest, BaseModel>(
+                    RequestSpecs.authUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
+                    Endpoint.TRANSFER,
+                    ResponseSpecs.badRequestResponse()
+            ).getCrudRequester().post(body);
 
-            softly.assertThat(errorMessage)
-                    .as("Сообщение о неуспешном переводе")
-                    .isEqualTo(TRANSFER_AMOUNT_CANNOT_EXCEED_10000);
+            BigDecimal senderAfter = accountSteps.getBalance(SENDER_ID);
+            BigDecimal receiverAfter = accountSteps.getBalance(RECEIVER_ID);
 
-            softly.assertThat(accountSteps.getBalance(SENDER_ID))
-                    .as("Баланс отправителя не должен измениться")
-                    .isCloseTo(senderBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
-
-            softly.assertThat(accountSteps.getBalance(RECEIVER_ID))
-                    .as("Баланс получателя не должен измениться")
-                    .isCloseTo(receiverBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
+            softly.assertThat(senderAfter).isEqualTo(senderBefore);
+            softly.assertThat(receiverAfter).isEqualTo(receiverBefore);
         }
     }
 

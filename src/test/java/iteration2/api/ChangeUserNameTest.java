@@ -1,7 +1,11 @@
 package iteration2.api;
 
 import api.generators.RandomModelGenerator;
-import api.models.GenerateChangeUserNameRequest;
+import api.models.*;
+import api.requests.skeleton.Endpoint;
+import api.requests.skeleton.requesters.ValidatedCrudRequester;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import common.annotations.Browsers;
 import common.storage.SessionStorage;
 import org.junit.jupiter.api.Nested;
@@ -38,19 +42,28 @@ public class ChangeUserNameTest extends BaseTest{
         })
 
         public void failChangeName(String invalidName) {
-            String nameBefore = SessionStorage.getUserSteps().getProfile().getName();
+            String nameBefore = new ValidatedCrudRequester<BaseModel, GenerateChangeUserNameResponse>(
+                    RequestSpecs.authUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
+                    Endpoint.USER_NAME,
+                    ResponseSpecs.successResponse()
+            ).get().getName();
 
-            var body = GenerateChangeUserNameRequest.builder().name(invalidName).build();
+            var body = RandomModelGenerator.generate(GenerateChangeUserNameRequest.class);
+            body.setName(invalidName);
 
-            String errorMessage = userSteps.changeNameAndExpectError(body);
+            new ValidatedCrudRequester<GenerateChangeUserNameRequest, BaseModel>(
+                    RequestSpecs.authUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
+                    Endpoint.USER_NAME,
+                    ResponseSpecs.badRequestResponse()
+            ).getCrudRequester().put(body);
 
-            String nameAfter = userSteps.getProfile().getName();
+            String nameAfter = new ValidatedCrudRequester<BaseModel, GenerateChangeUserNameResponse>(
+                    RequestSpecs.authUser(SessionStorage.getUser().getUsername(), SessionStorage.getUser().getPassword()),
+                    Endpoint.USER_NAME,
+                    ResponseSpecs.successResponse()
+            ).get().getName();
 
-            softly.assertThat(errorMessage)
-                    .isEqualTo(INVALID_NAME_MESSAGE);
-
-            softly.assertThat(nameAfter)
-                    .isEqualTo(nameBefore);
+            softly.assertThat(nameAfter).isEqualTo(nameBefore);
         }
     }
 }

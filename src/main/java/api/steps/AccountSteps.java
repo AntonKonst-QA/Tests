@@ -5,6 +5,7 @@ import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.requesters.ValidatedCrudRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+import io.restassured.specification.ResponseSpecification;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
@@ -59,14 +60,11 @@ public class AccountSteps {
         ).post(body);
     }
 
-    public String depositExpectingError(GenerateDepositRequest body, io.restassured.specification.ResponseSpecification expectedResponse) {
-        return new ValidatedCrudRequester<GenerateDepositRequest, BaseModel>(
+    public void depositExpectingError(GenerateDepositRequest body, ResponseSpecification expectedResponse) {
+         new ValidatedCrudRequester<GenerateDepositRequest, BaseModel>(
                 RequestSpecs.authUser(this.username, this.password),
                 Endpoint.DEPOSIT,
                 expectedResponse
-        ).getCrudRequester()
-                .post(body)
-                .extract()
-                .asString();
+        ).post(body);
     }
 }

@@ -1,5 +1,6 @@
 package api.requests.skeleton.requesters;
 
+import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import lombok.Getter;
@@ -7,6 +8,8 @@ import api.models.BaseModel;
 import api.requests.skeleton.Endpoint;
 import api.requests.skeleton.HttpRequest;
 import api.requests.skeleton.interfaces.CrudEndpointInterface;
+
+import java.util.List;
 
 public class ValidatedCrudRequester<RQ extends BaseModel, RS extends BaseModel> extends HttpRequest implements CrudEndpointInterface<RQ, RS> {
     @Getter
@@ -19,35 +22,36 @@ public class ValidatedCrudRequester<RQ extends BaseModel, RS extends BaseModel> 
         this.responseClass = (Class<RS>) endpoint.getResponseModel();
     }
 
-    private RS extractResponse(io.restassured.response.Response response) {
-        try {
-            return response.as(responseClass);
-        } catch (Exception e) {
-            return null;
-        }
+    private RS extractResponse(ValidatableResponse response) {
+        return response.extract().as(responseClass);
+    }
+
+    private List<RS> extractList(ValidatableResponse response) {
+        return response.extract().jsonPath().getList(".", responseClass);
     }
 
     @Override
-    public RS post(RQ model) {
-        return extractResponse(crudRequester.post(model).extract().response());
-    }
+    public List<RS> getAll() {return extractList(crudRequester.get());}
+
+    @Override
+    public RS post(RQ model) {return extractResponse(crudRequester.post(model));}
 
     @Override
     public RS put(RQ model) {
-        return extractResponse(crudRequester.put(model).extract().response());
+        return extractResponse(crudRequester.put(model));
     }
 
     @Override
     public RS get() {
-        return extractResponse(crudRequester.get().extract().response());
+        return extractResponse(crudRequester.get());
     }
 
     @Override
     public RS get(long id) {
-        return extractResponse(crudRequester.get(id).extract().response());
+        return null;
     }
 
     public RS getWithParam(String paramName, Object value) {
-        return extractResponse(crudRequester.getWithPathParam(paramName, value).extract().response());
+        return extractResponse(crudRequester.getWithPathParam(paramName, value));
     }
 }

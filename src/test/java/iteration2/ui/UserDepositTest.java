@@ -2,17 +2,22 @@ package iteration2.ui;
 
 import common.annotations.UserSession;
 import org.assertj.core.data.Offset;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import ui.pages.BankAlerts;
 import ui.pages.DepositPage;
 import ui.pages.UserDashboard;
 
 import java.math.BigDecimal;
 
+@Execution(ExecutionMode.SAME_THREAD)
 public class UserDepositTest extends BaseUiTest {
 
     @Test
     @UserSession
+    @Order(1)
     public void userCanCreateDepositTest() {
 
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
@@ -34,6 +39,7 @@ public class UserDepositTest extends BaseUiTest {
     // Негативный тест
     @Test
     @UserSession
+    @Order(2)
     public void userCanNotCreateDepositTest() {
 
         // Шаг 1: Запомнили баланс на бэке ДО клика в браузере

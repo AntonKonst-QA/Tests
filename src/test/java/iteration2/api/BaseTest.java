@@ -4,13 +4,16 @@ import api.configs.Config;
 import api.models.CustomerModel;
 import api.steps.AccountSteps;
 import api.steps.UserSteps;
+import common.extensions.TimingExtension;
 import common.storage.SessionStorage;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
+@ExtendWith(TimingExtension.class)
 public class BaseTest {
 
     protected AccountSteps accountSteps;

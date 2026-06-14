@@ -2,8 +2,9 @@ package iteration2.api;
 
 import api.models.GenerateTransferRequest;
 import org.assertj.core.data.Offset;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -16,6 +17,8 @@ import static api.TestConstants.SENDER_ID;
 import static api.TestConstants.SUCCESS_TRANSFER_MESSAGE;
 import static api.TestConstants.*;
 
+@Execution(ExecutionMode.SAME_THREAD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
 
     @ParameterizedTest(name = "Перевод со своего аккаунта на аккаунт {0}, сумма перевода: {1}")
@@ -25,6 +28,7 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             "2, 9999.99", // Кейс №3: перевод на свой аккаунт суммы, меньше максимальной
             "2, 0.01", // Кейс №4: перевод на свой аккаунт суммы, больше нуля
     })
+    @Order(1)
     void successTransferTest(int receiverId, BigDecimal amount) {
         // Проверяем баланс (GET) до перевода
         BigDecimal senderBefore = accountSteps.getBalance(SENDER_ID);
@@ -53,8 +57,10 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
 
     // Перевод больше допустимого лимита
     @Nested
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class LimitValuesTransferTests {
         @Test
+        @Order(2)
         public void moreThanPermissibleAmountTest() {
 
             BigDecimal senderBefore = accountSteps.getBalance(SENDER_ID);
@@ -93,8 +99,9 @@ public class TransferMoneyFromOneAccountToAnotherTest extends BaseTest{
             );
         }
 
-        @ParameterizedTest(name = "Проверка перевода с некорректной суммойЖ {0}")
+        @ParameterizedTest(name = "Проверка перевода с некорректной суммой: {0}")
         @MethodSource("provideInvalidTransfers")
+        @Order(3)
         public void failedTransferMoneyTest(BigDecimal invalidDeposit, String expectedError) {
 
             BigDecimal senderBefore = accountSteps.getBalance(SENDER_ID);

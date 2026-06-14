@@ -5,17 +5,22 @@ import api.models.GenerateChangeUserNameRequest;
 import common.annotations.Browsers;
 import common.storage.SessionStorage;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import api.utils.ModelComparator;
 
 import static api.TestConstants.*;
 
+@Execution(ExecutionMode.SAME_THREAD)
 public class ChangeUserNameTest extends BaseTest{
 
     @Test
     @Browsers("chrome")
+    @Order(1)
     public void successChangeUserName() {
         var requestBody = RandomModelGenerator.generate(GenerateChangeUserNameRequest.class);
         var response = userSteps.changeName(requestBody);
@@ -37,6 +42,7 @@ public class ChangeUserNameTest extends BaseTest{
                 "" // Вместо имени пустое поле
         })
 
+        @Order(2)
         public void failChangeName(String invalidName) {
             String nameBefore = SessionStorage.getUserSteps().getProfile().getName();
 

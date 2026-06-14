@@ -2,15 +2,20 @@ package iteration2.ui;
 
 import api.generators.RandomData;
 import common.annotations.UserSession;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import ui.pages.BankAlerts;
 import ui.pages.EditProfilePage;
 import ui.pages.UserDashboard;
 
+@Execution(ExecutionMode.SAME_THREAD)
 public class ChangeUserNameTest extends BaseUiTest {
 
     @Test
     @UserSession
+    @Order(1)
     public void userCanChangeUserName() {
 
         // Шаг 1: Запомнили имя пользователя на бэке ДО изменения имени пользователя
@@ -34,6 +39,7 @@ public class ChangeUserNameTest extends BaseUiTest {
 
     @Test
     @UserSession
+    @Order(2)
     public void userCanNotChangeUserName() {
 
         // Шаг 1: Запомнили имя пользователя на бэке ДО изменения имени пользователя

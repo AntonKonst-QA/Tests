@@ -15,12 +15,10 @@ import static com.codeborne.selenide.Selenide.switchTo;
 @Getter
 public class DepositPage extends BasePage<DepositPage> {
     private final SelenideElement accountSelector = $(".account-selector");
-    private final SelenideElement amountInput = $(By.xpath("//input[@placeholder='Enter amount']"));
-    private final SelenideElement depositButton = $(By.xpath("//button[contains(text(), 'Deposit')]"));
-    public static String accountNumber = "ACC1";
+    private final SelenideElement amountInput = $(".deposit-input");
+    private final SelenideElement depositButton = $(".btn-primary");
     public static final BigDecimal VALID_DEPOSIT = new BigDecimal("500");
     public static final BigDecimal INVALID_DEPOSIT = new BigDecimal("0");
-    public static final int ID = 1;
 
     @Override
     public String url() {
@@ -29,7 +27,7 @@ public class DepositPage extends BasePage<DepositPage> {
 
     public DepositPage makeDeposit(String account, BigDecimal amount) {
         accountSelector.shouldBe(Condition.visible).selectOptionContainingText(account);
-        amountInput.setValue(String.valueOf(amount));
+        amountInput.shouldBe(Condition.visible).setValue(amount.toString());
         depositButton.click();
         return this;
     }

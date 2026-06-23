@@ -8,6 +8,7 @@ import api.specs.ResponseSpecs;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @AllArgsConstructor
 public class AccountSteps {
@@ -16,7 +17,7 @@ public class AccountSteps {
 
     public BigDecimal getBalance(int accountId) {
         var requester = new ValidatedCrudRequester<BaseModel, CustomerAccountsResponse>(
-                RequestSpecs.authUser(this.username, this.password),
+                RequestSpecs.authAsUser(this.username, this.password),
                 Endpoint.ACCOUNTS,
                 ResponseSpecs.successResponse()
         );
@@ -35,14 +36,14 @@ public class AccountSteps {
 
     public GenerateTransferResponse transfer(GenerateTransferRequest body) {
         return new ValidatedCrudRequester<GenerateTransferRequest, GenerateTransferResponse>(
-                RequestSpecs.authUser(this.username, this.password),
+                RequestSpecs.authAsUser(this.username, this.password),
                 Endpoint.TRANSFER,
                 ResponseSpecs.successResponse()
         ).post(body);
     }
 
     public String transferExpectingError(GenerateTransferRequest body) {
-        return new ValidatedCrudRequester<GenerateTransferRequest, BaseModel>(RequestSpecs.authUser(this.username, this.password),
+        return new ValidatedCrudRequester<GenerateTransferRequest, BaseModel>(RequestSpecs.authAsUser(this.username, this.password),
                 Endpoint.TRANSFER,
                 ResponseSpecs.badRequestResponse()
         ).getCrudRequester()
@@ -53,7 +54,7 @@ public class AccountSteps {
 
     public void deposit(GenerateDepositRequest body) {
         new ValidatedCrudRequester<GenerateDepositRequest, BaseModel>(
-                RequestSpecs.authUser(this.username, this.password),
+                RequestSpecs.authAsUser(this.username, this.password),
                 Endpoint.DEPOSIT,
                 ResponseSpecs.successResponse()
         ).post(body);
@@ -61,12 +62,38 @@ public class AccountSteps {
 
     public String depositExpectingError(GenerateDepositRequest body, io.restassured.specification.ResponseSpecification expectedResponse) {
         return new ValidatedCrudRequester<GenerateDepositRequest, BaseModel>(
-                RequestSpecs.authUser(this.username, this.password),
+                RequestSpecs.authAsUser(this.username, this.password),
                 Endpoint.DEPOSIT,
                 expectedResponse
         ).getCrudRequester()
                 .post(body)
                 .extract()
                 .asString();
+    }
+
+    public AccountModel createAccount() {
+        return io.restassured.RestAssured.given()
+                .spec(api.specs.RequestSpecs.authAsUser(this.username, this.password))
+                .body(new api.models.BaseModel(){})
+                .post("/accounts")
+                .then()
+                .statusCode(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.greaterThanOrEqualTo(200),
+                        org.hamcrest.Matchers.lessThan(300)
+                ))
+                .extract()
+                .as(AccountModel.class);
+    }
+
+    public List<AccountModel> getAccounts() {
+        return new ValidatedCrudRequester<BaseModel, BaseModel>(
+                RequestSpecs.authAsUser(this.username, this.password),
+                Endpoint.ACCOUNTS,
+                ResponseSpecs.successResponse()
+        ).getCrudRequester()
+                .get()
+                .extract()
+                .jsonPath()
+                .getList(".", AccountModel.class);
     }
 }

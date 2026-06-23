@@ -9,7 +9,7 @@ import static com.codeborne.selenide.Selenide.$;
 
 @Getter
 public class UserDashboard extends BasePage<UserDashboard> {
-    private final SelenideElement userDashboardText = $(".welcome-text");
+    private final SelenideElement userDashboardText = $(Selectors.byClassName("welcome-text"));
     private final SelenideElement depositMoneyButton = $(Selectors.byText("\uD83D\uDCB0 Deposit Money"));
 
     @Override

@@ -21,23 +21,17 @@ public class TransferPage extends BasePage<TransferPage> {
     private final SelenideElement termsCheckbox = $("input[type='checkbox']");
     private final SelenideElement sendTransferButton = $(Selectors.byText("\uD83D\uDE80 Send Transfer"));
 
-    public static final int SENDER_ID = 1;
-    public static final String RECEIVER_ACC_NAME = "ACC4";
     public static final BigDecimal VALID_TRANSFER = new BigDecimal("4");
     public static final BigDecimal INVALID_TRANSFER = new BigDecimal("0");
-    public static String recipientAccount = "ACC1";
-    public static String recipientName = "kate19981";
 
     @Override
-    public String url() {
-        return "/transfer";
-    }
+    public String url() { return "/transfer"; }
 
     public TransferPage makeTransfer(String accountFrom, String recipientName, String recipientAccount, BigDecimal amount) {
-        accountSelector.shouldBe(Condition.visible, Duration.ofSeconds(5)).selectOptionContainingText(accountFrom);
+        accountSelector.shouldBe(Condition.visible).selectOptionContainingText(accountFrom);
         recipientNameInput.setValue(recipientName);
         recipientAccountInput.setValue(recipientAccount);
-        amountInput.setValue(String.valueOf(amount));
+        amountInput.setValue(amount.toString()); // .toString() достаточно
         termsCheckbox.click();
         sendTransferButton.click();
         return this;

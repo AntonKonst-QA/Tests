@@ -7,6 +7,18 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Endpoint {
+    ADMIN_USER(
+            "/admin/users",
+            CreateUserRequest.class,
+            CreateUserResponse.class
+    ),
+
+    LOGIN(
+            "/auth/login",
+            LoginUserRequest.class,
+            LoginUserResponse.class
+    ),
+
     USER_NAME(
             "/customer/profile",
             GenerateChangeUserNameRequest.class,
@@ -14,9 +26,10 @@ public enum Endpoint {
     ),
 
     ACCOUNTS(
+            "/accounts",
             "/customer/accounts",
-            null,
-            CustomerAccountsResponse.class
+            BaseModel.class,
+            AccountModel.class
     ),
 
     TRANSACTIONS(
@@ -35,6 +48,12 @@ public enum Endpoint {
     TRANSFER(
             "/accounts/transfer",
             "/customer/accounts",
+            GenerateTransferRequest.class,
+            GenerateTransferResponse.class
+    ),
+
+    DELETE_USER(
+            "/admin/users/{id}",
             GenerateTransferRequest.class,
             GenerateTransferResponse.class
     );

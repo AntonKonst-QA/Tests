@@ -1,59 +1,73 @@
 package iteration2.ui;
 
-import common.annotations.UserSession;
+import api.generators.CreateUserInAPIForUi;
+import api.steps.AccountSteps;
+import api.steps.UserSteps;
 import org.assertj.core.data.Offset;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import ui.pages.BankAlerts;
 import ui.pages.DepositPage;
 import ui.pages.UserDashboard;
 
 import java.math.BigDecimal;
 
-@Execution(ExecutionMode.SAME_THREAD)
 public class UserDepositTest extends BaseUiTest {
 
-    @Test
-    @UserSession
-    @Order(1)
-    public void userCanCreateDepositTest() {
+    private AccountSteps accountSteps;
+    private UserSteps userSteps;
+    private CreateUserInAPIForUi.UserData userData;
 
-        // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        BigDecimal balanceBefore = accountSteps.getBalance(DepositPage.ID);
+    @BeforeEach
+    public void prepareUser() {
+        super.setupTest();
 
-        // Шаг 2: Проверка UI
-       new UserDashboard()
-               .checkWelcomeText()
-               .openDepositModal()
-               .makeDeposit(DepositPage.accountNumber, DepositPage.VALID_DEPOSIT)
-               .checkAlertMessageAndAccept(BankAlerts.SUCCESSFULLY_DEPOSITED, DepositPage.VALID_DEPOSIT, DepositPage.accountNumber);
+        this.userData = CreateUserInAPIForUi.createReadyToUseUser();
+        BaseUiTest.usersToDelete.add(userData.response.getId());
 
-        // Шаг 3: Проверка изменения на бэке
-        softly.assertThat(accountSteps.getBalance(DepositPage.ID))
-                .as("После UI-пополнения баланс на бэкенде должен увеличиться на " + DepositPage.VALID_DEPOSIT)
-                .isCloseTo(balanceBefore.add(DepositPage.VALID_DEPOSIT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
+        this.accountSteps = new AccountSteps(userData.response.getUsername(), userData.rawPassword);
+        this.userSteps = new UserSteps(userData.response.getUsername(), userData.rawPassword);
+
+        login(userData.response.getUsername(), userData.rawPassword);
     }
 
-    // Негативный тест
     @Test
-    @UserSession
-    @Order(2)
-    public void userCanNotCreateDepositTest() {
+    public void userCanCreateDepositTest() {
+        var accounts = accountSteps.getAccounts();
+        if (accounts.isEmpty()) {
+            throw new RuntimeException("У пользователя нет активных счетов!");
+        }
 
-        // Шаг 1: Запомнили баланс на бэке ДО клика в браузере
-        BigDecimal balanceBefore = accountSteps.getBalance(DepositPage.ID);
+        String myAccountNumber = accounts.get(0).getAccountNumber();
+        int myAccountId = accounts.get(0).getId();
 
-        // Шаг 2: Проверка UI
+        BigDecimal balanceBefore = accountSteps.getBalance(myAccountId);
+
         new UserDashboard()
                 .checkWelcomeText()
                 .openDepositModal()
-                .makeDeposit(DepositPage.accountNumber, DepositPage.INVALID_DEPOSIT)
+                .makeDeposit(myAccountNumber, DepositPage.VALID_DEPOSIT)
+                .checkAlertMessageAndAccept(BankAlerts.SUCCESSFULLY_DEPOSITED, DepositPage.VALID_DEPOSIT, myAccountNumber);
+
+        softly.assertThat(accountSteps.getBalance(myAccountId))
+                .isCloseTo(balanceBefore.add(DepositPage.VALID_DEPOSIT), Offset.offset(BigDecimal.ONE.movePointLeft(2)));
+    }
+
+    @Test
+    public void userCanNotCreateDepositTest() {
+        var accounts = accountSteps.getAccounts();
+        String myAccountNumber = accounts.get(0).getAccountNumber();
+        int myAccountId = accounts.get(0).getId();
+
+        BigDecimal balanceBefore = accountSteps.getBalance(myAccountId);
+
+        new UserDashboard()
+                .checkWelcomeText()
+                .openDepositModal()
+                .makeDeposit(myAccountNumber, DepositPage.INVALID_DEPOSIT)
                 .checkAlertMessageAndAccept(BankAlerts.PLEASE_ENTER_A_VALID_AMOUNT);
 
-        // Шаг 3: Проверка изменения на бэке
-        softly.assertThat(accountSteps.getBalance(DepositPage.ID))
+        softly.assertThat(accountSteps.getBalance(myAccountId))
                 .as("Баланс не должен измениться")
                 .isCloseTo(balanceBefore, Offset.offset(BigDecimal.ONE.movePointLeft(2)));
     }

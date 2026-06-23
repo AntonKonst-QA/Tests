@@ -5,22 +5,22 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class Config {
-    private static Properties properties;
+    private static final Config INSTANCE = new Config();
 
-    static {
-        loadProperties();
+    private final Properties properties = new Properties();
+
+    private Config() {
+        loadAllProperties();
     }
 
-    private static void loadProperties() {
-        properties = new Properties();
-        // Перечисляем все файлы конфигурации, которые хотим загрузить
+    private void loadAllProperties() {
         String[] configFiles = {
                 "config.properties",
                 "model-comparison.properties"
         };
 
         for (String fileName : configFiles) {
-            try (InputStream is = Config.class.getClassLoader().getResourceAsStream(fileName)) {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream(fileName)) {
                 if (is != null) {
                     properties.load(is);
                     System.out.println("✅ Конфигурация загружена: " + fileName);
@@ -34,6 +34,6 @@ public class Config {
     }
 
     public static String getProperty(String key) {
-        return properties.getProperty(key);
+        return INSTANCE.properties.getProperty(key);
     }
 }
